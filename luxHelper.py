@@ -3,6 +3,7 @@ from datetime import datetime
 from PIL import Image
 import argparse
 import os.path
+import math
 
 def Load_CSV(luxFilename):
     with open(luxFilename, newline='') as csvfile:
@@ -30,6 +31,20 @@ def ParseCSVDate(date_str):
 
 def ParseLuxInfo(lux):
     return float(lux)
+
+def FindMaxLux(rows):
+    max = -1
+    for row in rows:
+        if float(row[1]) > max:
+            max = float(row[1])
+    return max
+
+def FindMinLux(rows):
+    min = float(rows[0][1])
+    for row in rows:
+        if float(row[1]) < min:
+            min = float(row[1])
+    return min
 
 def DetectSamplingsPerDay(rows):
     # count the number of samples per day
@@ -61,9 +76,14 @@ def DetectSamplingsPerDay(rows):
 def Lux2BMP(luxFilename, outBitmap):
     rows = Load_CSV(luxFilename)
     days_histogram = DetectSamplingsPerDay(rows)
+
     # this will be used to define the max size of the heigth image
     max_samples_per_day = max(days_histogram)
     total_samples_days = len(days_histogram)
+
+    maxLux = FindMaxLux(rows)
+    minLux = FindMinLux(rows)
+    rangeLux = maxLux - minLux
 
     print("Maximium samples per day found: ", max_samples_per_day)
     print("Total days found: ", total_samples_days)
@@ -75,17 +95,29 @@ def Lux2BMP(luxFilename, outBitmap):
     lin = 0
 
     for row in rows:
-        lux = int(ParseLuxInfo(row[1]))
+
+        lux = ParseLuxInfo(row[1])
+        # normilize lux
+        lux = (lux - minLux) / rangeLux
+        # change lux scale, adding more bits to low scale values
+        # smaller expoents lead to greater contrast
+        # near to 1 expoents lead to more original image contrast
+        # this function amplification guarantee that the range of amplification is always
+        # between 0 and 1 (0 and 255)
+        lux = int(pow(lux, 0.5) * 255)
+
         pixels[col,lin] = (lux,lux,lux)
 
         lin = lin + 1
         #if lin >= max_samples_per_day:
         if lin >= days_histogram[col]:
+
             lin = 0
             col = col + 1
             if col > total_samples_days:
                 raise Exception("max number {} column exceded expected {}".format(col, total_samples_days))
                 #col = total_samples_days
+
     img.save(outBitmap)
 
 def BMP2Lux(bmpFile, refLuxFile, final_lux_filename):
@@ -95,11 +127,15 @@ def BMP2Lux(bmpFile, refLuxFile, final_lux_filename):
     max_samples_per_day = max(days_histogram)
     total_samples_days = len(days_histogram)
 
+    maxLux = FindMaxLux(rows)
+    minLux = FindMinLux(rows)
+    rangeLux = maxLux - minLux
+
     print("Maximium samples per day found: ", max_samples_per_day)
     print("Total days found: ", total_samples_days)
 
-    # check that the bmpFile has the sabe width and height that the refLuxFile has
-    
+    # check that the bmpFile has the same width and height that the refLuxFile has
+    refLux = rangeLux/255
     with Image.open(bmpFile) as im:
         if im.width != total_samples_days:
             raise Exception("Bitmap witdh does not correspont to original number of days at the lux file")
@@ -116,7 +152,7 @@ def BMP2Lux(bmpFile, refLuxFile, final_lux_filename):
             # pixels[col,lin] = (lux,lux,lux)
             r, g, b = rgb_im.getpixel((col, lin))
             date = row[0]
-            outLuxDate.append([date, (r+g+b)/3])
+            outLuxDate.append([date, (((r+g+b)/3)*refLux)+minLux])
 
             lin = lin + 1
 
@@ -127,13 +163,11 @@ def BMP2Lux(bmpFile, refLuxFile, final_lux_filename):
                     raise Exception("max number {} column exceded expected {}".format(col, total_samples_days))
 
         print("redLux valid rows ", len(rows), " Bitmap rows count ", len(outLuxDate))
-        #print(outLuxDate)
 
         with open(final_lux_filename, mode='w') as csvfile:
             
             headers = Load_CSV_Headers(refLuxFile)
             writer = csv.writer(csvfile, delimiter='\t', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            print (headers)
 
             for row in headers:
                 writer.writerow(row)
