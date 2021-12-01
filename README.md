@@ -1,10 +1,10 @@
 # LuxHelper
 
-Lux helper is a program target to help adjust Lux data from solar geolocators faster with the use of standard image editors.
+Lux helper is a program target to help adjust Lux data information, such as correct mising points, from solar geolocators in a easier way, by the use of standard image editors.
 
-Typical, solar geolocators produce Lux data with missing, dim and noise samples, that require manual adjusts, specially during sunrise and sunset. This periods are utilized by diverse analisys to estimage the position of the geolocators and their carries: birds.
+Typically, solar geolocators produce Lux data with missing, dim and noise samples. That, that require manual adjusts, specially during sunrise and sunset itensity areas. This periods are utilized by analisys tools to estimate the position of the geolocators and their carries: birds.
 
-This information is typically adjusted by reseachers using R and TwGeo package, on a sample basis, in a demandaing task, on a not to intuitive fronted build onto R.
+The missing points of geolocator data is typically adjusted by reseachers using R and TwGeo package, on a sample basis, in a demanding task, onto a not intuitive fronted build onto R.
 
 This program address this adjustment, allowing the use of of-the-self image editors, such as Gimp.
 
@@ -22,19 +22,18 @@ The program was write in Python 3 and should run out of the box on any terminal,
 
 Clone or download the current repository on your machine.
 
-You need Python 3 to execute the program. Tests were made with Python 3.8.10 on Ubuntu 20.04 Linux machine, however should work with any machine containing Python 3, like Windows ones.
+You need Python 3 to execute the program. Tests were made with Python 3.8.10 on Ubuntu 20.04 Linux machine, however should work with both with Windows and Linux containing Python 3.
 
-No special libraries are required to execute. Out of box Python should work.
+No special libraries are required to execute.
 
 Suggest installing vanilal Python from https://www.python.org/downloads/
 
 Possible Bitmap editors to be used are:
 * MS Paint (simple but effective)
 * Gimp (powerfull and free).
+* **Avoid using Inkspace, since it is a vectorial editor.**
 
-Suggest using git-bash on Windows as terminal https://git-scm.com/downloads.
-
-> Avoid using Inkspace, since it is a vector editor and can change the image resolution easily.
+For terminal, suggest using git-bash on Windows https://git-scm.com/downloads.
 
 ## Using the tool
 
@@ -55,20 +54,20 @@ Example command:
 
 `python3 luxHelper.py lux2bmp --luxFile ../Downloads/Chestnut_BV753.lux`
 
-The command will generate a BMP file on the current folder called **Chestnut_BV753.lux.bmp** containing the converted lux file. Then you can open the image on any editor and proceed he adjustments on sunrise and sunset.
+The command will generate a BMP file on the same folder called `Chestnut_BV753.lux.bmp` for the required `Chestnut_BV753.lux` lux file. Then you can open the image on any editor and proceed the adjustments on sunrise and sunset.
 
-> NOTE: 
+> NOTE:
 > Since Lux data usually varies from 0 to 100.000 Lux, and bitmaps only support values from 0 to 255 (8 bits), we do the follow processing on each entry:
 > 
-> We normalize all the entries, apply a exponential adjustment and scale to 0 to 255 to be
+> We normalize all the entries, apply a exponential adjustment and scale them between 0 to 255 to be
 >  possible to use with BMP file. The exponential adjustment allows low bright values to
-> be more visible, and high bright values to do not change.
-> After external processing is done on editor, the scprit scales back the values to original ranges.
+> be more visible, but change little the high bright values.
+> After external processing is done on the editor, the scprit will scales back the values to original ranges.
 >
 
-Only use back, white and gray while editing the image. On Gimp you can easily adjust the image contrast to enhance dim points, draw lines and use tools libe Erode and Dilate to adjust the final image. Dont forget to save the changes after finish over the original Bitmap.
+Only use values between back and white while editing the image. On Gimp you can easily adjust the image contrast to enhance dim points, draw lines and use tools like Erode and Dilate to adjust the final image. Don't forget to save the changes after finish **over the original Bitmap**.
 
-> ATTENTION: Do not change the image width or height.
+> ATTENTION: Do not change the image WIDTH or HEIGHT.
 
 --------
 
@@ -78,7 +77,6 @@ Example command:
 
 `python3 luxHelper.py bmp2lux --bmpFile Chestnut_BV753.lux.bmp --refLuxFile Chestnut_BV753.lux`
 
-The command will convert the Bitmap defined on bmpFile to a LUX file on the current folder called **Chestnut_BV753.lux.bmp.lux**. Now you can grab this file and import it inside R and proceed normally with your data analisys.
+The command will convert the Bitmap defined on bmpFile parameter `Chestnut_BV753.lux.bmp` to a LUX file on the current folder called `Chestnut_BV753.lux.bmp.lux`. Now you can grab this file and import it inside R and proceed normally with your data analisys.
 
-If the original dimentions of the image were changed, the *bmp2lux* will detect and stop without producing any artifacts.
-
+If the original dimensions of the image were changed during the process, the *bmp2lux* will detect and stop without producing any artifacts.
